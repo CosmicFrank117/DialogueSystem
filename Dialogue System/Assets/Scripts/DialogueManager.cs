@@ -2,36 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DialogueManager : MonoBehaviour
+public class DialogueManager : Singleton<DialogueManager>
 {
-    #region SingletonStuff
-    static DialogueManager _instance = null;
-
-    public static DialogueManager Instance { get { return _instance; } }
-
-    private void Awake()
-    {
-        if (_instance != null && _instance != this)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (this == _instance)
-        {
-            _instance = null;
-        }
-    }
-
-    #endregion
-
     public DialogueDatabase database;
 
     private float dialogueWaitTime;
@@ -61,7 +33,10 @@ public class DialogueManager : MonoBehaviour
 
         if(dialogueDatabase.TryGetValue(dialogueName, out data))
         {
-            StartDialogue(data);
+            if (data != currentDialogue)
+            {
+                StartDialogue(data);
+            }
         }
     }
 
@@ -93,7 +68,9 @@ public class DialogueManager : MonoBehaviour
     }
 
     private void PlayResponseLine(int currentResponseIndex) 
-    { 
+    {
+        EvtSystem.EventDispatcher.Raise<DisableUI>(new DisableUI());
+
         if (currentDialogue.responses.Length > currentResponseIndex)
         {
             DialogueLineData line = currentDialogue.responses[currentResponseIndex];
@@ -122,6 +99,11 @@ public class DialogueManager : MonoBehaviour
             }
 
             EvtSystem.EventDispatcher.Raise<ShowResponses>(responseMessage);
+        }
+        else
+        {
+            EvtSystem.EventDispatcher.Raise<DisableUI>(new DisableUI());
+            currentDialogue = null;
         }
     }
 
