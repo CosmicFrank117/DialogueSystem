@@ -6,22 +6,21 @@ public class DialogueManager : Singleton<DialogueManager>
 {
     public DialogueDatabase database;
 
-    private float dialogueWaitTime;
-    private float kDefaultWaitTime = 2;
-    private DialogueLineData currentDialogue;
-    private float currentTime;
+    private float dialogueWaitTime = 0.0f;
+    private const float kDefaultWaitTime = 2.0f;
+    private DialogueLineData currentDialogue = null;
+    private float currentTime = 0.0f;
 
     Dictionary<string, DialogueLineData> dialogueDatabase = new Dictionary<string, DialogueLineData>();
 
     public void Start()
     {
         LoadDatabase();
-
     }
 
     public void LoadDatabase()
     {
-        foreach(DialogueLineData line in database.data)
+        foreach (DialogueLineData line in database.data)
         {
             dialogueDatabase.Add(line.name, line);
         }
@@ -31,25 +30,16 @@ public class DialogueManager : Singleton<DialogueManager>
     {
         DialogueLineData data = null;
 
-        if(dialogueDatabase.TryGetValue(dialogueName, out data))
+        if (dialogueDatabase.TryGetValue(dialogueName, out data))
         {
             if (data != currentDialogue)
-            {
                 StartDialogue(data);
-            }
         }
     }
 
     public void StartDialogue(DialogueLineData lineToStart)
     {
-        //Show text on screen
-        ShowDialogueText message = new ShowDialogueText();
-        message.text = lineToStart.text;
-        message.id = lineToStart.character;
-
-        EvtSystem.EventDispatcher.Raise<ShowDialogueText>(message) ;
-
-        //Play dialogue audio
+        //Play dialogue Audio
         if (lineToStart.dialogueAudio != null)
         {
             PlayAudio audioMessage = new PlayAudio();
@@ -63,11 +53,20 @@ public class DialogueManager : Singleton<DialogueManager>
         {
             dialogueWaitTime = kDefaultWaitTime;
         }
+
+        //Show Text on Screen
+        ShowDialogueText message = new ShowDialogueText();
+        message.text = lineToStart.text;
+        message.id = lineToStart.character;
+        message.duration = dialogueWaitTime;
+
+        EvtSystem.EventDispatcher.Raise<ShowDialogueText>(message);
+
         currentDialogue = lineToStart;
         currentTime = 0.0f;
     }
 
-    private void PlayResponseLine(int currentResponseIndex) 
+    private void PlayResponseLine(int currentResponseIndex)
     {
         EvtSystem.EventDispatcher.Raise<DisableUI>(new DisableUI());
 
@@ -78,27 +77,30 @@ public class DialogueManager : Singleton<DialogueManager>
         }
     }
 
-
     private void CreateResponseMessage()
     {
         int numResponses = currentDialogue.responses.Length;
-        if(numResponses > 0)
+        if (numResponses > 1)
         {
             ShowResponses responseMessage = new ShowResponses();
 
             responseMessage.responses = new ResponseData[numResponses];
 
             int index = 0;
-            foreach(DialogueLineData response in currentDialogue.responses)
+            foreach (DialogueLineData response in currentDialogue.responses)
             {
                 responseMessage.responses[index].text = response.text;
-                responseMessage.responses[index].karnaScore = response.karmaScore;
+                responseMessage.responses[index].karmaScore = response.karmaScore;
                 int currentIndex = index;
                 responseMessage.responses[index].buttonAction = () => { this.PlayResponseLine(currentIndex); };
-                index++; 
+                index++;
             }
 
             EvtSystem.EventDispatcher.Raise<ShowResponses>(responseMessage);
+        }
+        else if (numResponses == 1)
+        {
+            PlayResponseLine(0);
         }
         else
         {
@@ -107,24 +109,24 @@ public class DialogueManager : Singleton<DialogueManager>
         }
     }
 
-
     public void Update()
     {
         if (currentDialogue != null && dialogueWaitTime > 0.0f)
         {
+            bool shouldSkip = Input.GetKeyUp(KeyCode.Space);
+
             currentTime += Time.deltaTime;
-            if (currentTime >= dialogueWaitTime)
+            if (currentTime >= dialogueWaitTime || shouldSkip)
             {
                 dialogueWaitTime = 0.0f;
-
                 CreateResponseMessage();
             }
         }
 
         if (Input.GetKeyUp(KeyCode.E))
         {
+            
             StartDialogue("Dialogue01");
         }
     }
-
 }
