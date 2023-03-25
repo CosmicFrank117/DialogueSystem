@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Dialogue System/Line Table")]
 public class DialogueDatabase: ScriptableObject
 {
-    public DialogueLineData[] data;
+    [FormerlySerializedAs("data")]
+    public List<DialogueLineData> dataList;
 }

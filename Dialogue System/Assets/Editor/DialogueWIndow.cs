@@ -15,7 +15,10 @@ public class DialogueWIndow : EditorWindow
     private DialogueLineData m_activeItem = null;
     private InspectorElement m_detailInspecteor = null;
     private GroupBox m_listBox = null;
+    private GroupBox m_detailBox = null;
     private ListView m_listView = null;
+    private Button m_addButton = null;
+    private Button m_deleteButton = null;
     private DialogueDatabase m_currentDatabase = null;
 
     [MenuItem("Window/MyTools/DialogueWIndow")]
@@ -28,7 +31,7 @@ public class DialogueWIndow : EditorWindow
     private void BindFunc(VisualElement e, int i)
     {
         Label item = e as Label;
-        item.text = m_currentDatabase.data[i].name;
+        item.text = m_currentDatabase.dataList[i].name;
     }
 
     public void PopulateDialogueList()
@@ -41,9 +44,9 @@ public class DialogueWIndow : EditorWindow
 
             Action<VisualElement, int> bindItem = BindFunc;
 
-            m_listView = new ListView(m_currentDatabase.data, EditorGUIUtility.singleLineHeight, makeItem, bindItem);
+            m_listView = new ListView(m_currentDatabase.dataList, EditorGUIUtility.singleLineHeight, makeItem, bindItem);
 
-            m_listView.itemsSource = m_currentDatabase.data;
+            m_listView.itemsSource = m_currentDatabase.dataList;
 
             m_listView.selectionType = SelectionType.Single;
 
@@ -85,6 +88,56 @@ public class DialogueWIndow : EditorWindow
         root.Add(uxmlData);
 
         m_listBox = root.Query<GroupBox>("MainContent").First();
+        m_detailBox = root.Query<GroupBox>("DetailBox").First();
+
+        m_addButton = root.Query<Button>("AddButton").First();
+        m_addButton.clicked += () => CreateNewDialogueLine();
+
+        m_deleteButton = root.Query<Button>("DeleteButton").First();
+        m_deleteButton.clicked += () => DeleteSelectedDialogueLine();
+    }
+
+    private void CreateNewDialogueLine()
+
+    {
+        string path = EditorUtility.SaveFilePanelInProject("Create Dialogue File", "DefaultDialogueLine", "asset", "Please select a name for your dialogue file");
+
+        if (path.Length != 0)
+        {
+            DialogueLineData line = ScriptableObject.CreateInstance<DialogueLineData>();
+            AssetDatabase.CreateAsset(line, path);
+            AssetDatabase.Refresh();
+
+
+            m_currentDatabase.dataList.Add(line);
+            EditorUtility.SetDirty(m_currentDatabase);
+
+            PopulateDialogueList();
+
+            m_listView.SetSelection(m_currentDatabase.dataList.Count - 1);
+        }
+    }
+
+    private void DeleteSelectedDialogueLine()
+    {
+        if (m_activeItem != null)
+        {
+            m_currentDatabase.dataList.Remove(m_activeItem);
+
+            AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_activeItem));
+            EditorUtility.SetDirty(m_currentDatabase);
+
+            m_activeItem = null;
+
+            PopulateDialogueList();
+
+            if (m_currentDatabase.dataList.Count > 0)
+            {
+                m_listView.SetSelection(0);
+            }
+        }
+
+
     }
 
     private void DialogueListSelectionChanged(IEnumerable<object> selectedItems)
@@ -98,7 +151,7 @@ public class DialogueWIndow : EditorWindow
         {
             m_detailInspecteor = new InspectorElement();
             m_detailInspecteor.style.flexGrow = 1.0f;
-            m_listBox.Add(m_detailInspecteor);
+            m_detailBox.Add(m_detailInspecteor);
         }
 
         if (selectedItems.Count() > 0)

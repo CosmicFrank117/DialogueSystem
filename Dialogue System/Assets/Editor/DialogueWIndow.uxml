@@ -1,4 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Editor/DialogueWIndow.uss?fileID=7433441132597879392&amp;guid=0a03b6828e7e5cc4786033df929b6713&amp;type=3#DialogueWIndow" />
-    <ui:GroupBox name="MainContent" style="flex-direction: row; flex-grow: 1;" />
+    <ui:GroupBox name="MainBox" style="height: 255px; flex-direction: row;">
+        <ui:GroupBox name="MainContent" style="flex-direction: row; flex-grow: 1;" />
+        <ui:GroupBox name="DetailBox" style="flex-grow: 1;" />
+    </ui:GroupBox>
+    <ui:GroupBox style="flex-direction: row; flex-grow: 1; align-items: flex-end;">
+        <ui:Button tabindex="-1" text="Add" display-tooltip-when-elided="true" name="AddButton" />
+        <ui:Button tabindex="-1" text="Delete" display-tooltip-when-elided="true" name="DeleteButton" />
+    </ui:GroupBox>
 </ui:UXML>

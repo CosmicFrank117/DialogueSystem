@@ -20,7 +20,7 @@ public class DialogueManager : Singleton<DialogueManager>
 
     public void LoadDatabase()
     {
-        foreach (DialogueLineData line in database.data)
+        foreach (DialogueLineData line in database.dataList)
         {
             dialogueDatabase.Add(line.name, line);
         }
